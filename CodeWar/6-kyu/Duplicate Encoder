@@ -1,0 +1,48 @@
+//Kata Description
+The goal of this exercise is to convert a string to a new string where each character in the new string is '(' if that character appears only once in the original string, or ')' if that character appears more than once in the original string. Ignore capitalization when determining if a character is a duplicate.
+
+Examples:
+
+"din" => "((("
+
+"recede" => "()()()"
+
+"Success" => ")())())"
+
+"(( @" => "))(("
+
+//Best Practice (though longer runtime than my method)
+public class DuplicateEncoder {
+  static String encode(String word){
+    word = word.toLowerCase();
+    String result = "";
+    for (int i = 0; i < word.length(); ++i) {
+      char c = word.charAt(i);
+      result += word.lastIndexOf(c) == word.indexOf(c) ? "(" : ")";
+    }
+    return result;
+  }
+}
+
+// My solution
+public class DuplicateEncoder {
+	static String encode(String word){
+    String word2 = word.toLowerCase();
+    char[] individual = word2.toCharArray();
+    String[] result = new String[word.length()];
+    java.util.Arrays.fill(result, "(");
+    for(int i = 0; i < word.length() ; i++){
+      for(int j = i + 1; j < word.length(); j++){
+       if(individual[i] == individual[j]) {
+         result[i] = ")";
+         result[j] = ")";
+       }
+      }
+    }
+    String wordfinal = "";
+    for(int k = 0; k < result.length; k++){
+    wordfinal = wordfinal + result[k];
+    }
+    return wordfinal;
+  }
+}
