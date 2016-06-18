@@ -1,0 +1,21 @@
+//learn from : http://stackoverflow.com/a/21923424
+
+if(mystring.matches("^[0-9]*\\.?[0-9]*$")) {
+    // Do something
+}
+else {
+    // Do something else
+}
+
+/**
+This RegEx states:
+
+The ^ means the string must start with this.
+Followed by none or more digits (The * does this).
+Optionally have a single decimal (The ? does this).
+Follow by none or more digits (The * does this).
+And the $ means it must end with this.
+Note that bullet point #2 is to catch someone entering ".02" for example.
+
+If that is not valid make the RegEx: "^[0-9]+\\.?[0-9]*$"
+**/
