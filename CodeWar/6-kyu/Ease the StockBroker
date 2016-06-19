@@ -1,0 +1,322 @@
+//Kata Description
+Clients place orders to a stockbroker as strings. The order can be simple or multiple.
+
+Type of a simple order: Quote /space/ Quantity /space/ Price /space/ Status
+
+where Quote is formed of non-whitespace character, Quantity is an int, Price a double (with mandatory decimal point "." ), Status is represented by the letter B (buy) or the letter S (sell).
+
+Example:
+
+"GOOG 300 542.0 B"
+
+A multiple order is the concatenation of simple orders with a comma between each.
+
+Example:
+
+"ZNGA 1300 2.66 B, CLH15.NYM 50 56.32 B, OWW 1000 11.623 B, OGG 20 580.1 B"
+
+To ease the stockbroker your task is to produce a string of type
+
+"Buy: b Sell: s" where b and s are 'double' formatted with no decimal (rounded to integers), b representing the total price of bought stocks and s the total price of sold stocks.
+
+Example:
+
+"Buy: 294990 Sell: 0"
+
+Unfortunately sometimes clients make mistakes. When you find mistakes in orders, you must pinpoint these badly formed orders and produce a string of type:
+
+"Buy: b Sell: s; Badly formed nb: badly-formed 1st simple order ;badly-formed nth simple order ;"
+
+where nb is the number of badly formed simple orders, b representing the total price of bought stocks with correct simple order and s the total price of sold stocks with correct simple order.
+
+Examples:
+
+"Buy: 263 Sell: 11802; Badly formed 2: CLH16.NYM 50 56 S ;OWW 1000 11 S ;"
+
+"Buy: 100 Sell: 56041; Badly formed 1: ZNGA 1300 2.66 ;"
+
+Note: Due to Codewars whitespace differences will not always show up in test results.
+
+//Best Practice
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class OrdersSummary {
+
+    public static String balanceStatements(String lst) {
+        if(lst.isEmpty()){
+            return "Buy: 0 Sell: 0";
+        }
+
+        List<Order> orders = new ArrayList<>();
+        List<String> badOrders = new ArrayList<>();
+
+        for (String orderAsString : extractOrdersFrom(lst)) {
+            try {
+                orders.add(Order.createFromInput(orderAsString));
+            } catch (InvalidOrderException e) {
+                badOrders.add(orderAsString);
+            }
+        }
+
+        return buildOrdersSummary(orders, badOrders);
+
+    }
+
+    private static List<String> extractOrdersFrom(String lst) {
+        return Arrays.stream(lst.split(",")).map(String::trim).collect(Collectors.toList());
+    }
+
+    private static String buildOrdersSummary(List<Order> orders, List<String> badOrders) {
+        return "Buy: " + calcSumOfBoughtStocks(orders) + " Sell: " + calcSumOfSoldStocks(orders) + createMessageForFailedOrders(badOrders);
+    }
+
+    private static long calcSumOfBoughtStocks(List<Order> orders) {
+        return calcSumOfStocksByStatus(orders, OrderStatus.BUY);
+    }
+
+    private static long calcSumOfSoldStocks(List<Order> orders) {
+        return calcSumOfStocksByStatus(orders, OrderStatus.SELL);
+    }
+
+    private static long calcSumOfStocksByStatus(List<Order> orders, OrderStatus status) {
+        double sum = orders.stream()
+                .filter(order -> order.getStatus() == status)
+                .mapToDouble(order -> order.getPrice() * order.getQuantity())
+                .sum();
+        return Math.round(sum);
+    }
+
+    private static String createMessageForFailedOrders(List<String> badOrders) {
+        if (badOrders.isEmpty()) {
+            return "";
+        }
+
+        return "; Badly formed " + badOrders.size() + ": " + String.join(" ;", badOrders) + " ;";
+    }
+}
+
+class Order {
+
+    private final int quantity;
+    private final double price;
+    private final OrderStatus status;
+
+    private Order(int quantity, double price, OrderStatus status) {
+
+        this.quantity = quantity;
+        this.price = price;
+        this.status = status;
+    }
+
+    public static Order createFromInput(String orderAsString) throws InvalidOrderException {
+
+        String[] orderParts = orderAsString.split(" ");
+
+        if(orderParts.length != 4){
+            throw new InvalidOrderException();
+        }
+
+        try {
+            return createOrder(orderParts);
+        } catch (NumberFormatException e) {
+            throw new InvalidOrderException();
+        }
+    }
+
+    private static Order createOrder(String[] orderParts) throws InvalidOrderException {
+        int quantity = Integer.parseInt(orderParts[1]);
+        if (!orderParts[2].contains(".")) {
+            throw new InvalidOrderException();
+        }
+        double price = Double.parseDouble(orderParts[2]);
+        OrderStatus status = OrderStatus.getByAbbreviation(orderParts[3]);
+        return new Order(quantity, price, status);
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+}
+
+enum OrderStatus {
+    BUY("B"),
+    SELL("S");
+
+    private final String abbreviation;
+
+    OrderStatus(String abbreviation) {
+        this.abbreviation = abbreviation;
+    }
+
+
+    public static OrderStatus getByAbbreviation(String abbreviation) throws InvalidOrderException {
+        return Arrays.stream(OrderStatus.values())
+                .filter(orderStatus -> orderStatus.abbreviation.equals(abbreviation))
+                .findFirst()
+                .orElseThrow(InvalidOrderException::new);
+    }
+
+}
+
+class InvalidOrderException extends Exception {
+
+
+}
+
+//Solution by g964 (the author)
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class OrdersSummary { // must be public in codewars
+    private static class OrderStatement {
+    static enum Status {
+          BUY, SELL;
+      }
+    private String name;
+    private int howMany;
+    private double price;
+    private Status status;
+    private int illformed;
+          
+    private OrderStatement(String order) throws java.lang.IllegalStateException {
+    String pattern = "\\s*(\\S+)\\s+(\\d+)\\s+(\\d*\\.\\d+)\\s+([BS])\\s*";
+    Pattern r = Pattern.compile(pattern);
+    Matcher m = r.matcher(order);
+    try {
+        m.find();
+        this.name = m.group(1);
+        this.howMany = Integer.parseInt(m.group(2));
+        this.price = Double.parseDouble(m.group(3));
+        if (m.group(4).equals("B")) this.status = Status.valueOf("BUY"); 
+        else this.status = Status.valueOf("SELL");
+        this.illformed = 0;
+        } catch (java.lang.IllegalStateException e) { 
+        this.name = order;
+        this.howMany = 0;
+        this.price = 0.00;
+        this.status = Status.valueOf("BUY"); 
+        this.illformed = 1;
+       }
+    }  
+      
+    public String toString() {
+        return "(" + this.name + ") " + this.howMany + " " + this.price + " " + this.status.name() + " " + this.illformed;
+    }
+  }
+  public static String balanceStatements(String lst) {
+    Double buy  = 0.0; Double sell = 0.0; int illfmd = 0;
+    if (lst.length() == 0) 
+      return String.format("Buy: %.0f Sell: %.0f", buy, sell);
+    List<OrderStatement> ordersBook = new ArrayList<>();
+    String[] tabBooks = lst.split(",");
+    for (int i = 0; i < tabBooks.length; i++)
+      ordersBook.add(new OrderStatement(tabBooks[i].trim()));
+    
+    String res = "";
+    for (OrderStatement o : ordersBook) {
+      if (o.status == OrderStatement.Status.valueOf("BUY")) 
+        buy += o.price * o.howMany;
+      else 
+        sell += o.price * o.howMany;
+      if (o.illformed != 0) {
+        illfmd += 1;
+        res = res + o.name + " ;";
+      }
+    }  
+    String s_buysell = String.format("Buy: %.0f Sell: %.0f", buy, sell);
+    if (illfmd != 0) s_buysell = s_buysell + "; Badly formed " + illfmd + ": " + res; 
+    return s_buysell;
+  }
+}
+
+//My solution
+public class OrdersSummary { 
+	
+	public static String balanceStatements(String lst) {
+    int b = 0;
+    int s = 0;
+    int nb = 0;
+    String res = "";
+    String extra = "";
+    
+    if(lst.contains(",")){
+      String[] mor = lst.split(", ");
+      for(int i = 0; i < mor.length ; i++){
+        String[] var = order(mor[i],b,s,nb,extra).split(" ");
+        if(i < mor.length - 1){
+        b = Integer.parseInt(var[1]);
+        String[] svar = var[3].split(";");
+        s = Integer.parseInt(svar[0]);
+        }
+        if(var.length > 4){
+   			int pnb = nb;
+       		String[] nbvar = var[6].split(":");
+       		nb = Integer.parseInt(nbvar[0]);
+        	if(nb != pnb){ 
+        		extra = extra + mor[i].trim() + " ;";
+         	}
+        }
+         res = order(mor[i],b,s,(nb),extra);
+        }
+        return res;      
+    }//multiple order
+    else{
+	    return(order(lst, b, s, nb,extra));       
+    }//simple order
+  }
+  
+  public static String order(String lst, int b, int s, int nb, String extra){
+      String[] or = lst.split(" ");
+      
+    	if(lst == null || lst.isEmpty()){
+        String res = "Buy: " + b + " Sell: " + s;
+        return res;
+      }
+      if(((or[(or.length-1)].equals("B")) && (isDecimals(or[2])) && (or.length == 4)) ){
+        b = (int) Math.round((b + ((Integer.parseInt(or[1])) * (Double.parseDouble(or[2])))));
+        String res = "Buy: " + b + " Sell: " + s;
+        if(nb<1){
+        	return res;
+        }
+        else{
+        	res = res + "; Badly formed " + nb +": " + extra;
+          	return res;
+        }
+        }
+      else if(or[(or.length-1)].equals("S") && (isDecimals(or[2])) && (or.length == 4)){
+        s = (int) Math.round(( s + (Integer.parseInt(or[1]) * Double.parseDouble(or[2]))));
+        String res = "Buy: " + b + " Sell: " + s;
+        if(nb<1){
+        	return res;
+        }
+        else{
+        	res = res + "; Badly formed " + nb +": " + extra;
+          	return res;
+        }
+        }
+      else{
+        nb++;
+        if(nb<1){
+        	String res = "Buy: " + b + " Sell: " + s + "; Badly formed " + nb +": " + lst;
+          	return res;
+        }
+        else{
+        	String res = "Buy: " + b + " Sell: " + s + "; Badly formed " + nb +": " + extra + lst;
+          	return res;
+        }
+        }
+	  }
+  public static boolean isDecimals(String string) {
+    return string.matches("^[0-9]*\\.[0-9]*$");
+  }
+}
