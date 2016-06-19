@@ -1,0 +1,37 @@
+//Kata Description
+The main mode is having a method named main inside a class and should return nothing but should print a line to the standard output with the message Hello World!. For Java the main method should receive String array as parameters that can be specified when running from console with the command
+
+    java Solution.class parameter1 parameter2
+
+//Best Practice
+public class NoBoring {
+    public static int noBoringZeros(int n) {
+        if (n == 0)
+            return n;
+            
+        while (n % 10 == 0)
+            n /= 10;       
+        
+        return n;
+    }
+}
+
+//Another way
+public class NoBoring {
+  public static int noBoringZeros(int n) {
+    return Integer.parseInt(Integer.toString(n).replaceAll("(.*[1-9])0*\\z", "$1"));
+  }
+}
+
+//My Solution
+public class NoBoring {
+    public static int noBoringZeros(int n) {
+        // your code
+        if(n == 0){
+        return n;
+        }
+        else{
+        return Integer.parseInt(String.valueOf(n).replaceAll("0*$", ""));
+        }
+    }
+}
