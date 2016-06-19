@@ -1,0 +1,34 @@
+//Kata Description
+Write the function resistor_parallel that recieve an undefined number of resistances parallel resistors and return the total resistance.
+
+You can assume that there will be no 0 as parameter. Also there will be at least 2 arguments.
+
+Formula: 1/total = 1/r1 + 1/r2 + .. + 1/rn total = 1 / (1/r1 + 1/r2 + .. + 1/rn)
+
+Examples: resistor_parallel(20, 20) will return 10.0 resistor_parallel(20,20, 40): will return 8.0
+
+//Best Practice
+import java.util.Arrays;
+
+class ParallelResistors {
+    
+    public static double resistance(double... resistors) {   // don't forget the arguments
+      double rInv = Arrays.stream(resistors)
+        .map(r -> 1/r)
+        .sum();
+      return 1 / rInv;
+    }
+}
+
+//My Solution
+class ParallelResistors {
+    
+    public static double resistance(double... r) {   // don't forget the arguments
+        // your code here
+        double subtotal = 0;
+        for(double sub : r){
+            subtotal = subtotal + (1/sub) ;
+        }
+        return (1/subtotal);
+    }
+}
