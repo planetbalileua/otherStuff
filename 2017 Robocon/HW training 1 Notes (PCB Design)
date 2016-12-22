@@ -1,0 +1,19 @@
+-dont add ROM when drawing PCB
+-press TAB to change the wire width
+ signal 10 mil
+ power 30 mil
+-use num lock * for via
+-shift-s : only display one side layer
+    press * again to change the side
+-define board shape : there is a mystery button go 
+-design board shape to define board shape
+-board shape: create primitive from board shape
+-draw polygon->right click - rebuild all
+-tools:design rule check
+-design: change rules
+-components list: smart PDF
+-LM2479: step down 24V to 5V
+  * need to know current limit, voltage output
+  * You might need to calculate some of the value of resistor/inductor
+ 
+-datasheet might have detail design procedure
